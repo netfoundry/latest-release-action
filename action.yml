@@ -1,23 +1,28 @@
-name: 'action-latest-release-version'
-description: 'Fetch the latest release version for the current repository'
-author: 'alessiovierti'
+name: latest-release-action
+description: Fetch the latest release version for the current repository
+author: alessiovierti
 branding:
   icon: tag
   color: purple
 
 outputs:
   latest-release:
-    description: 'Latest release version'
+    description: Latest release version
     value: ${{ steps.fetch-latest-release-version.outputs.latest-release }}
+  commit-sha:
+    description: Latest release tag's commit sha
+    value: ${{ steps.fetch-latest-release-version.outputs.commit-sha }}
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - id: fetch-latest-release-version
       run: |
         git fetch --tags
         git fetch --prune --unshallow || true
-        export LATEST_RELEASE_VERSION=$(git describe --abbrev=0 --tags)
-        echo "::set-output name=latest-release::$(echo $LATEST_RELEASE_VERSION)"
-        echo The latest release version is \"$LATEST_RELEASE_VERSION\".
+        export LAST_TAG=$(git describe --abbrev=0 --tags)
+        echo "latest-release=${LAST_TAG}" >> ${GITHUB_OUTPUT}
+        COMMIT_SHA=$(git rev-list -n 1 ${LAST_TAG})
+        echo "commit-sha=${COMMIT_SHA}" >> ${GITHUB_OUTPUT}
+        echo The latest release version is "${LAST_TAG} (${COMMIT_SHA})".
       shell: bash
