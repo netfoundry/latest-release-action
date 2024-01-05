@@ -1,10 +1,15 @@
 name: latest-release-action
-description: Fetch the latest release version for the current repository
+description: Fetch the latest release version for the current repository, optionally filtering by tag prefix.
 author: alessiovierti
 branding:
   icon: tag
   color: purple
 
+inputs:
+  tag-prefix:
+    description: 'Prefix to filter tags by. If not specified, all tags will be considered.'
+    required: false
+    default: ''
 outputs:
   latest-release:
     description: Latest release version
@@ -20,7 +25,8 @@ runs:
       run: |
         git fetch --tags
         git fetch --prune --unshallow || true
-        export LAST_TAG=$(git describe --abbrev=0 --tags)
+        PREFIX=${{ inputs.tag-prefix }}
+        export LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
         echo "latest-release=${LAST_TAG}" >> ${GITHUB_OUTPUT}
         COMMIT_SHA=$(git rev-list -n 1 ${LAST_TAG})
         echo "commit-sha=${COMMIT_SHA}" >> ${GITHUB_OUTPUT}
