@@ -25,14 +25,23 @@ runs:
       run: |
         set -o xtrace
         set -o pipefail
-        git fetch --tags --prune --unshallow || git fetch --tags --prune
+
+        if [[ "$(git rev-parse --is-shallow-repository)" == true ]]
+          git fetch --tags --prune --unshallow
+        else
+          git fetch --tags --prune
+        fi
+
+        PREFIX=${{ inputs.tag-prefix }}
+        git tag -l "${PREFIX}*" | sort -V
         git branch
+        git remote show origin
+
         WORKSPACE_HEAD=$(git rev-parse HEAD)
         DEFAULT_BRANCH=$(git remote show origin | grep -Po 'HEAD branch:\K.*' | xargs echo -n)
         git checkout "${DEFAULT_BRANCH}"
         git pull origin
-        PREFIX=${{ inputs.tag-prefix }}
-        git tag -l "${PREFIX}*" | sort -V
+
         if LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
         then
           echo "latest-release=${LAST_TAG}" | tee -a ${GITHUB_OUTPUT}
@@ -41,7 +50,9 @@ runs:
           exit 1
         fi
         COMMIT_SHA=$(git rev-list -n 1 ${LAST_TAG})
-        git checkout "${WORKSPACE_HEAD}"
         echo "commit-sha=${COMMIT_SHA}" | tee -a ${GITHUB_OUTPUT}
         echo The latest release version is "${LAST_TAG} (${COMMIT_SHA})".
+
+        # revert to original HEAD
+        git checkout "${WORKSPACE_HEAD}"
       shell: bash
