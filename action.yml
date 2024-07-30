@@ -25,7 +25,7 @@ runs:
       run: |
         set -o xtrace
         set -o pipefail
-        git fetch --tags --prune --unshallow
+        git fetch --tags --prune --unshallow || git fetch --tags --prune
         git branch
         git rev-parse HEAD
         DEFAULT_BRANCH=$(git remote show origin | grep -Po 'HEAD branch:\K.*' | xargs echo -n)
