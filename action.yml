@@ -24,7 +24,7 @@ runs:
     - id: fetch-latest-release-version
       run: |
         git fetch --tags
-        git fetch --prune --unshallow || true
+        git fetch --prune --unshallow
         PREFIX=${{ inputs.tag-prefix }}
         LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
         if [[ -z "${LAST_TAG}" ]]
