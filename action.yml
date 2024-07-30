@@ -27,6 +27,7 @@ runs:
         set -o pipefail
 
         if [[ "$(git rev-parse --is-shallow-repository)" == true ]]
+        then
           git fetch --tags --prune --unshallow
         else
           git fetch --tags --prune
