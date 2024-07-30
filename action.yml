@@ -28,20 +28,19 @@ runs:
 
         if [[ "$(git rev-parse --is-shallow-repository)" == true ]]
         then
-          git fetch --tags --prune --unshallow
-        else
-          git fetch --tags --prune
+          git fetch --prune --unshallow
         fi
 
-        PREFIX=${{ inputs.tag-prefix }}
-        git tag -l "${PREFIX}*" | sort -V
         git branch
         git remote show origin
 
         WORKSPACE_HEAD=$(git rev-parse HEAD)
         DEFAULT_BRANCH=$(git remote show origin | grep -Po 'HEAD branch:\K.*' | xargs echo -n)
         git checkout "${DEFAULT_BRANCH}"
-        git pull origin
+        git fetch --tags --prune
+
+        PREFIX=${{ inputs.tag-prefix }}
+        git tag -l "${PREFIX}*" | sort -V
 
         if LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
         then
