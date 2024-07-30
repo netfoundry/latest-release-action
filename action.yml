@@ -26,7 +26,13 @@ runs:
         git fetch --tags
         git fetch --prune --unshallow || true
         PREFIX=${{ inputs.tag-prefix }}
-        export LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
+        LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
+        if [[ -z "${LAST_TAG}" ]]
+        then
+          echo "ERROR: No matching tags found." >&2
+          (set -x; git describe --abbrev=0 --tags --match "${PREFIX}*")
+          exit 1
+        fi
         echo "latest-release=${LAST_TAG}" | tee -a ${GITHUB_OUTPUT}
         COMMIT_SHA=$(git rev-list -n 1 ${LAST_TAG})
         echo "commit-sha=${COMMIT_SHA}" | tee -a ${GITHUB_OUTPUT}
