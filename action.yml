@@ -25,19 +25,19 @@ runs:
       run: |
         set -o xtrace
         set -o pipefail
-        git fetch --tags
-        git fetch --prune --unshallow
-        git rev-parse HEAD
+        git fetch --tags --prune --unshallow
         git branch
-        git status
+        git rev-parse HEAD
+        DEFAULT_BRANCH=$(git remote show origin | grep -Po 'HEAD branch:\K.*' | xargs echo -n)
         PREFIX=${{ inputs.tag-prefix }}
         git tag -l "${PREFIX}*" | sort -V
-        LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*") || {
+        if LAST_TAG=$(git describe --abbrev=0 --tags --match "${PREFIX}*")
+        then
+          echo "latest-release=${LAST_TAG}" | tee -a ${GITHUB_OUTPUT}
+        else
           echo "ERROR: No matching tags found." >&2
-          git describe --always --tags --match "${PREFIX}*"
           exit 1
-        }
-        echo "latest-release=${LAST_TAG}" | tee -a ${GITHUB_OUTPUT}
+        fi
         COMMIT_SHA=$(git rev-list -n 1 ${LAST_TAG})
         echo "commit-sha=${COMMIT_SHA}" | tee -a ${GITHUB_OUTPUT}
         echo The latest release version is "${LAST_TAG} (${COMMIT_SHA})".
